@@ -1,0 +1,42 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Run this pipeline when someone pushes code to 'main' branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest  # Run the pipeline on the latest Ubuntu server
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3  # Step to download your code from GitHub
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # Set the Node.js version to 18
+
+      - name: Install dependencies
+        run: npm install  # Run 'npm install' inside your subfolder
+        working-directory: node.js-demo-app  # Path to where package.json is
+
+      - name: Run tests
+        run: npm test  # Run 'npm test' if you have test scripts
+        working-directory: node.js-demo-app
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.USER_NAME }}/nodejs-demo-app:latest .
+        working-directory: node.js-demo-app  # Dockerfile is in this folder
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.USER_NAME }}  # Use your DockerHub username stored in secrets
+          password: ${{ secrets.PASSWORD }}  # Use your DockerHub token stored in secrets
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.USER_NAME }}/nodejs-demo-app:latest
