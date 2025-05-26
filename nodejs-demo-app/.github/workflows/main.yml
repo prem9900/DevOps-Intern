@@ -1,1 +1,40 @@
+name: CI/CD Pipeline   # Name of the workflow
+
+on:
+  push:                # Run this workflow when code is pushed
+    branches:
+      - main           # Only when pushing to the main branch
+
+jobs:
+  build-and-deploy:     # Name of the job
+    runs-on: ubuntu-latest  # Use the latest Ubuntu environment to run this job
+
+    steps:
+      - name: Checkout code   # Step 1: Get the latest code from your GitHub repo
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js  # Step 2: Install Node.js version 18 to run your app commands
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies  # Step 3: Install all Node.js packages your app needs
+        run: npm install
+
+      - name: Run tests              # Step 4: Run tests to check if app works properly
+        run: npm test
+
+      - name: Log in to DockerHub    # Step 5: Login to DockerHub to push your Docker image
+        uses: docker/login-action@v2
+        with:
+          username: prem9121         # Your DockerHub username
+          password: ${{ secrets.DOCKERHUB_TOKEN }}  # DockerHub password/token stored securely as a secret
+
+      - name: Build Docker image      # Step 6: Build Docker image using your Dockerfile
+        run: |
+          docker build -t prem9121/nodejs-demo-app:latest .
+
+      - name: Push Docker image       # Step 7: Upload the Docker image to your DockerHub repo
+        run: |
+          docker push prem9121/nodejs-demo-app:latest
 
